@@ -99,6 +99,7 @@ import {
   testEnvironment as openCodeTestEnvironment,
   sessionCodec as openCodeSessionCodec,
   listOpenCodeModels,
+  refreshOpenCodeModels,
 } from "@paperclipai/adapter-opencode-local/server";
 import {
   agentConfigurationDoc as openCodeAgentConfigurationDoc,
@@ -127,6 +128,20 @@ import {
   agentConfigurationDoc as piAgentConfigurationDoc,
   modelProfiles as piModelProfiles,
 } from "@paperclipai/adapter-pi-local";
+import {
+  execute as ollamaExecute,
+  listOllamaSkills,
+  syncOllamaSkills,
+  testEnvironment as ollamaTestEnvironment,
+  sessionCodec as ollamaSessionCodec,
+  getConfigSchema as getOllamaConfigSchema,
+  listOllamaAdapterModels,
+} from "@paperclipai/adapter-ollama-local/server";
+import {
+  agentConfigurationDoc as ollamaAgentConfigurationDoc,
+  models as ollamaModels,
+  modelProfiles as ollamaModelProfiles,
+} from "@paperclipai/adapter-ollama-local";
 import {
   execute as hermesExecute,
   testEnvironment as hermesTestEnvironment,
@@ -425,6 +440,7 @@ const openCodeLocalAdapter: ServerAdapterModule = {
   modelProfiles: openCodeModelProfiles,
   sessionManagement: getAdapterSessionManagement("opencode_local") ?? undefined,
   listModels: listOpenCodeModels,
+  refreshModels: refreshOpenCodeModels,
   supportsLocalAgentJwt: true,
   supportsInstructionsBundle: true,
   instructionsPathKey: "instructionsFilePath",
@@ -451,6 +467,31 @@ const piLocalAdapter: ServerAdapterModule = {
   getRuntimeCommandSpec: (config) =>
     buildNpmRuntimeCommandSpec(config, "pi", "@mariozechner/pi-coding-agent"),
   agentConfigurationDoc: piAgentConfigurationDoc,
+};
+
+const ollamaLocalAdapter: ServerAdapterModule = {
+  type: "ollama_local",
+  execute: ollamaExecute,
+  testEnvironment: ollamaTestEnvironment,
+  listSkills: listOllamaSkills,
+  syncSkills: syncOllamaSkills,
+  sessionCodec: ollamaSessionCodec,
+  sessionManagement: getAdapterSessionManagement("ollama_local") ?? undefined,
+  models: ollamaModels,
+  modelProfiles: ollamaModelProfiles,
+  listModels: listOllamaAdapterModels,
+  refreshModels: listOllamaAdapterModels,
+  supportsLocalAgentJwt: true,
+  supportsInstructionsBundle: true,
+  instructionsPathKey: "instructionsFilePath",
+  requiresMaterializedRuntimeSkills: false,
+  getRuntimeCommandSpec: (config) => ({
+    command: readConfiguredCommand(config, "ollama"),
+    detectCommand: readConfiguredCommand(config, "ollama"),
+    installCommand: null,
+  }),
+  agentConfigurationDoc: ollamaAgentConfigurationDoc,
+  getConfigSchema: getOllamaConfigSchema,
 };
 
 // hermes-paperclip-adapter v0.2.0 predates the authToken field; cast is
@@ -542,6 +583,7 @@ function registerBuiltInAdapters() {
     cursorLocalAdapter,
     geminiLocalAdapter,
     grokLocalAdapter,
+    ollamaLocalAdapter,
     openclawGatewayAdapter,
     hermesLocalAdapter,
     processAdapter,
